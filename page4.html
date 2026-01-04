@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-touch-callout" content="none">
+    <title>制作风筝</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400&display=swap">
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+
+        html, body {
+            overflow: hidden !important;
+            height: 100% !important;
+            touch-action: none !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+
+        body{
+            width:100vw;
+            height: 100vh;
+            background-image:url("背景图/花纹背景.jpg");
+            background-size:cover;
+            background-position:center;
+            font-family:"Noto Sans SC",sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-repeat: no-repeat;
+            transform: translateZ(0);
+            -webkit-font-smoothing: antialiased;
+            padding: 15px 15px;
+        }
+
+        /* 标题样式 */
+        .title-box{
+            width:90%;
+            max-width: 300px;
+            height:50px;
+            background: url("风筝制作/资源\ 103@0.5x.webp");
+            background-size: 100% 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 50px 0 20px 0;
+            flex-shrink: 0;
+            transform: translateY(40px);
+        }
+        
+        .title-text{
+            font-size: 18pt;
+            color:#333;
+            font-weight: 300;
+        }
+
+        /* 风筝容器样式 */
+        .skeleton-container{
+            width:100%;
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 20px 0 25px 0;
+            flex-shrink: 0;
+            border-radius: 10px;
+        }
+
+        /* 风筝图片样式 */
+        .skeleton-img{
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            transform: scale(1.1);
+            transform-origin: center center;
+            display:block;
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+            opacity: 1;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* 核心修改：选项容器 - 调整translateY实现向下挪动，数值越小（负数越小/正数）越向下 */
+        .options{
+            display: flex;
+            justify-content: space-around;
+            gap: 8vw;
+            width:95%;
+            max-width: 550px;
+            height: 20vw;
+            max-height: 120px;
+            background: url("风筝制作/资源\ 77@0.5x.webp")no-repeat center;
+            background-size: 100% 100%;
+            align-items: center;
+            touch-action: manipulation;
+            margin: 10px 0 30px 0;
+            flex-shrink: 0;
+            padding: 2vw 2vw;
+            transform: translateY(-40px); /* 【修改】从-60px改为-20px，整体向下挪40px */
+            position: relative; /* 作为子元素定位参考 */
+            overflow: hidden; /* 关键：超出部分隐藏 */
+        }
+
+        /* 核心修改：单个选项 - 取消上移，微调垂直位置 */
+        .option-item{
+            width: 12vw;
+            max-width: 60px;
+            height: 12vw;
+            max-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s ease-out, filter 0.2s ease-out;
+            -webkit-tap-highlight-color: transparent;
+            padding: 4px;
+            margin: 0;
+            position: relative;
+            transform: translateY(0); /* 取消上移，避免超出 */
+            top: 1vw; /* 微调垂直位置 */
+        }
+
+        /* 核心修改：小背景 - 调整尺寸+定位，完全在容器内 */
+        .option-item::before{
+            content: "";
+            position: absolute;
+            top: calc(50% + 1vw); /* 下移至中下部 */
+            left: 50%;
+            transform: translate(-50%, -50%); /* 精准居中 */
+            width: 18vw; /* 缩小宽度，适配容器 */
+            max-width: 75px; /* 限制最大宽度 */
+            height: auto;
+            background-image: url("风筝制作/资源 20@0.5x.webp");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+            aspect-ratio: 3 / 1;
+        }
+
+        /* 核心修改：激活状态 - 仅缩放不上移 */
+        .option-item.active{
+            transform: translateY(0) scale(1.08); /* 取消上移，仅保留缩放 */
+            filter:brightness(1.2);
+            top: 1vw; /* 保持垂直位置 */
+        }
+
+        /* 核心修改：图标 - 缩小尺寸+取消下移，适配容器 */
+        .option-icon{
+            width: 9vw; /* 缩小尺寸 */
+            max-width: 45px; /* 限制最大宽度 */
+            height: 9vw; /* 缩小尺寸 */
+            max-height: 45px; /* 限制最大高度 */
+            margin-bottom: 2vw; /* 减少与文字间距 */
+            z-index: 2;
+            position: relative;
+            transform: translateY(0); /* 取消下移 */
+        }
+
+        /* 核心修改：文字 - 回到容器内下边缘 */
+        .option-text{
+            font-size: clamp(10px, 3vw, 14px);
+            color:#333;
+            font-weight: 300;
+            text-align: center;
+            white-space: nowrap;
+            z-index: 2;
+            position: absolute;
+            bottom: 0; /* 容器内下边缘 */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* 按钮容器样式 - 同步调整translateY，保持和选项容器的间距 */
+        .btn-group{
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            margin: 0 auto;
+            align-items: center;
+            flex-shrink: 0;
+            transform: translateY(-50px); /* 【修改】从-70px改为-30px，同步向下挪40px */
+        }
+
+        .next-btn{
+            width: 100px;
+            height: 45px;
+            background: url("风筝制作/资源\ 103@0.5x.webp");
+            background-size: 100% 100%;
+            border: none;
+            font-size: clamp(14pt, 3vw, 16pt);
+            color: #333;
+            font-weight: 300;
+            cursor:pointer;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .next-btn.enable{
+            opacity:1;
+            pointer-events: all;
+        }
+
+        .next-btn.enable:active{
+            transform: scale(0.95);
+        }
+
+        .music-icon{
+            position:absolute;
+            top:30px;
+            right:30px;
+            width:32px;
+            height:32px;
+            background-image:url("封面/资源\ 24@0.5x.webp");
+            background-size:100% 100%;
+            background-repeat:no-repeat;
+            background-position: center;
+            cursor:pointer;
+            z-index: 999;
+            transition: transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            padding: 8px;
+            margin: -8px;
+        }
+
+        .music-icon.active{
+            animation: rotateMusic 3s linear infinite;
+            transform: translateZ(0);
+        }
+
+        @keyframes rotateMusic{
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 小屏适配 - 同步调整位移，保持布局协调 */
+        @media screen and (max-width:375px){
+            .title-box{
+                height:45px;
+                margin-bottom:15px;
+                transform: translateY(25px);
+            }
+            .skeleton-container{
+                height: 50vh;
+                margin-bottom:20px;
+            }
+            .options{
+                height:22vw;
+                margin: 0 0 25px 0;
+                gap:5vw;
+                padding: 2vw 1vw;
+                transform: translateY(-40px); /* 【修改】从-85px改为-40px，小屏也向下挪 */
+                overflow: hidden; /* 小屏也开启溢出隐藏 */
+            }
+            .option-item{
+                width: 11vw;
+                height: 14vw;
+                transform: translateY(0); /* 取消上移 */
+                top: 1.8vw; /* 小屏微调垂直位置 */
+            }
+            .option-item.active{
+                transform: translateY(0) scale(1.08); /* 仅缩放不上移 */
+                top: 1.5vw;
+            }
+            .option-item::before{
+                top: calc(50% + 2vw); /* 小屏小背景下移 */
+                width: 16vw; /* 小屏小背景进一步缩小 */
+                max-width: 65px; /* 限制最大宽度 */
+            }
+            .option-icon{
+                width: 8vw; /* 小屏图标缩小 */
+                max-width: 40px; /* 限制最大宽度 */
+                height: 8vw; /* 小屏图标缩小 */
+                max-height: 40px; /* 限制最大高度 */
+                transform: translateY(0); /* 取消下移 */
+                margin-bottom: 1.5vw; /* 减少间距 */
+            }
+            .option-text{
+                font-size: clamp(9px, 3vw, 12px);
+                bottom: 0; /* 容器内下边缘 */
+            }
+            .btn-group{
+                transform: translateY(-35px); /* 【修改】从-65px改为-35px，小屏同步调整 */
+            }
+            .next-btn{
+                width:80px;
+                height:30px;
+            }
+            .music-icon{
+                top:20px;
+                right:20px;
+                width:28px;
+                height:28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="bgMusic" loop preload="metadata" autoplay playsinline>
+        <source src="music.m4a" type="audio/mp4">
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+    <div class="music-icon" id="musicIcon"></div>
+    <div class ="title-box">
+        <span class="title-text">选择骨架形状</span>
+    </div>
+    <div class="skeleton-container">
+        <img src="骨架/骨架/IMG_2714.PNG" alt="燕子骨架" class="skeleton-img" id="skeletonImg">
+    </div>
+    <div class="options">
+        <div class="option-item"  data-type="swallow" data-skeleton="骨架/骨架/IMG_2714.PNG" data-icon="风筝制作/资源\ 73@0.5x.webp">
+            <img src="风筝制作/资源 73@0.5x.webp" alt="燕" class="option-icon">
+            <span class="option-text">燕</span>
+        </div>
+        <div class="option-item" data-type="butterfly" data-skeleton="骨架/骨架/IMG_2722.PNG" data-icon="风筝制作/资源 74@0.5x.webp">
+            <img src="风筝制作/资源 74@0.5x.webp" alt="蝶" class="option-icon">
+            <span class="option-text">蝶</span>
+        </div>
+        <div class="option-item" data-type="fish" data-skeleton="骨架/骨架/IMG_2718.PNG" data-icon="风筝制作/资源 75@0.5x.webp">
+            <img src="风筝制作/资源 75@0.5x.webp" alt="鱼" class="option-icon">
+            <span class="option-text">鱼</span>
+        </div>
+    </div>
+    <div class="btn-group">
+        <button class="next-btn" id="nextBtn">下一步</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 核心DOM元素获取
+            const optionItems = document.querySelectorAll('.option-item');
+            const skeletonImg = document.getElementById('skeletonImg');
+            const nextBtn = document.getElementById('nextBtn');
+            const musicIcon = document.getElementById('musicIcon');
+            const bgMusic = document.getElementById('bgMusic');
+            
+            // 状态变量初始化
+            let selectedType = '';
+            let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true' || false;
+            const savedTime = parseFloat(localStorage.getItem('musicTime') || 0);
+            let progressTimer = null;
+
+            // 初始化交互标记（仅首次无标记时设置）
+            if (!localStorage.getItem('musicHasInteraction')) {
+                localStorage.setItem('musicHasInteraction', 'false');
+            }
+
+            // 合并重复的事件拦截：禁止滑动/滚轮
+            ['touchmove', 'wheel'].forEach(eventType => {
+                document.addEventListener(eventType, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, { passive: false });
+            });
+
+            // 预加载图片（精简冗余逻辑）
+            const preloadImages = () => {
+                optionItems.forEach(item => {
+                    [item.getAttribute('data-skeleton'), item.getAttribute('data-icon')].forEach(url => {
+                        const img = new Image();
+                        img.src = url;
+                    });
+                });
+            };
+            setTimeout(preloadImages, 300);
+
+            // 骨架选择逻辑（精简重复的样式重置）
+            function handleOptionClick(e) {
+                e.stopPropagation();
+                if (e.type === 'touchstart') e.preventDefault();
+
+                const item = this;
+                // 重置所有选项激活状态
+                optionItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                // 骨架图片过渡效果
+                skeletonImg.style.opacity = 0;
+                skeletonImg.style.transform = 'scale(0.98)';
+                
+                const skeletonSrc = item.getAttribute('data-skeleton');
+                if (skeletonImg.src !== skeletonSrc) {
+                    skeletonImg.onload = function() {
+                        skeletonImg.style.opacity = 1;
+                        skeletonImg.style.transform = 'scale(1.1)';
+                    }
+                    skeletonImg.src = skeletonSrc;
+                } else {
+                    skeletonImg.style.opacity = 1;
+                    skeletonImg.style.transform = 'scale(1.1)';
+                }
+
+                selectedType = item.getAttribute('data-type');
+                nextBtn.classList.add('enable');
+            }
+
+            // 合并重复的事件绑定：选项点击/触摸
+            optionItems.forEach(item => {
+                item.addEventListener('touchstart', handleOptionClick, { passive: true });
+                item.addEventListener('click', handleOptionClick);
+            });
+
+            // 下一步按钮逻辑
+            function handleNextClick(e) {
+                e.stopPropagation();
+                if (selectedType) {
+                    saveMusicState();
+                    setTimeout(() => {
+                        window.location.href = `page5.html?type=${selectedType}`;
+                    }, 80);
+                }
+            }
+            nextBtn.addEventListener('touchstart', handleNextClick, { passive: true });
+            nextBtn.addEventListener('click', handleNextClick);
+
+            // 音乐状态保存（精简重复的存储逻辑）
+            function saveMusicState() {
+                localStorage.setItem('musicPlaying', String(isMusicPlaying));
+                localStorage.setItem('musicTime', String(Math.max(0, bgMusic.currentTime)));
+                localStorage.setItem('musicHasInteraction', 'true');
+            }
+
+            // 实时保存音乐进度
+            function startProgressTimer() {
+                if (progressTimer) clearInterval(progressTimer);
+                progressTimer = setInterval(() => {
+                    if (bgMusic.currentTime > 0 && !bgMusic.paused) {
+                        saveMusicState();
+                    }
+                }, 100);
+            }
+
+            // 音频初始化（适配移动端自动播放限制）
+            function initAudio() {
+                // 恢复播放进度
+                if (!isNaN(savedTime) && savedTime > 0) {
+                    bgMusic.currentTime = savedTime;
+                }
+                
+                // 强制默认播放
+                isMusicPlaying = true;
+                musicIcon.classList.add('active');
+                
+                // 静音兜底激活
+                bgMusic.muted = true;
+                bgMusic.play().then(() => {
+                    bgMusic.muted = false;
+                    console.log("page4音频强制激活成功");
+                }).catch(err => {
+                    console.log("page4音频激活兜底:", err);
+                    setTimeout(() => bgMusic.play(), 100);
+                });
+
+                startProgressTimer();
+                localStorage.setItem('musicHasInteraction', 'true');
+            }
+
+            // 合并重复的交互激活：首次触摸/点击激活音频
+            ['touchstart', 'click'].forEach(eventType => {
+                document.addEventListener(eventType, initAudio, { once: true });
+            });
+
+            // 音乐开关控制
+            function handleMusicClick(e) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                try {
+                    if (isMusicPlaying) {
+                        bgMusic.pause();
+                        musicIcon.classList.remove('active');
+                    } else {
+                        bgMusic.play();
+                        musicIcon.classList.add('active');
+                    }
+                    isMusicPlaying = !isMusicPlaying;
+                    saveMusicState();
+                } catch (e) {
+                    console.log('音乐控制异常:', e);
+                }
+            }
+            musicIcon.addEventListener('touchstart', handleMusicClick, { passive: false });
+            musicIcon.addEventListener('click', handleMusicClick);
+
+            // 页面可见性变化处理（精简重复判断）
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && isMusicPlaying) {
+                    bgMusic.pause();
+                    isMusicPlaying = false;
+                    musicIcon.classList.remove('active');
+                    saveMusicState();
+                }
+            });
+
+            // 页面卸载处理（精简冗余操作）
+            window.addEventListener('beforeunload', function() {
+                saveMusicState();
+                clearInterval(progressTimer);
+            });
+
+            // 图片加载错误处理（合并重复逻辑）
+            function handleImgError() {
+                this.style.opacity = 1;
+                this.style.transform = 'scale(1.1)';
+                console.error('图片加载失败:', this.src);
+            }
+            skeletonImg.onerror = handleImgError;
+            document.querySelectorAll('.option-icon').forEach(icon => {
+                icon.onerror = function() {
+                    this.style.opacity = 0.8;
+                    console.error('选项图标加载失败:', this.src);
+                }
+            });
+
+            // 页面加载完成后初始化音频
+            window.addEventListener('load', () => {
+                if (bgMusic.readyState >= 2 && localStorage.getItem('musicHasInteraction') === 'true') {
+                    initAudio();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
